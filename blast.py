@@ -182,6 +182,9 @@ def main():
     args.query,args.subject,args.annotation = [os.path.abspath(x) if x is not None else x for x in [args.query,args.subject,args.annotation]]
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     # generate the files and directories needed for the BLAST search in this directory
+    for d in ['logs/','results/','db/']:
+        if not os.path.isdir(d):
+            subprocess.call(['mkdir',d])
     query_fasta = check_query(args.query,args.name)
     if args.repeatmasker is not None:
         print('REPEAT MASKING CODE IN PROGRESS')
