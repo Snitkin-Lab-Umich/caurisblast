@@ -20,8 +20,11 @@ python blast.py --query [your_query] --subject [your_subject] --type [search_typ
 ```
 
 [your_query] should be your query sequences. These are what you are searching for. This should be a .fasta file or a directory of containing .fasta files.
+
 [your_subject] should be your subject sequences. These are what you are searching through for hits. This should also be a .fasta file or a directory of containing .fasta files.
+
 [search_type] should indicate if you are doing a nucleotide or protein BLAST.
+
 [run_name] should be a unique name for your run.
 
 Running this should place the outcome of your BLAST into the results/ directory.
@@ -52,7 +55,7 @@ This is the run name, which will prefix most output files.
 
 ### --format
 
-(Optional) This is the output format. By default, this is format 10, which is a .csv file. See https://www.ncbi.nlm.nih.gov/books/NBK279684/table/appendices.T.options_common_to_all_blast/ for all options.
+(Optional) This is the output format. By default, this is format 10, which is a .csv file. See [the BLAST+ manual](https://www.ncbi.nlm.nih.gov/books/NBK279684/table/appendices.T.options_common_to_all_blast/) for all options.
 
 
 
