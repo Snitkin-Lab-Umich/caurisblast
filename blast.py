@@ -92,18 +92,20 @@ def make_blast_db(input_fasta,output_name,type = 'nucl',container = None,debuglo
 def run_blast(input,database,output,type = 'nucl',format = '10',container = None,debuglog = 'logs/debug_log.txt'):
     if type == 'nucl':
         blastype = 'blastn'
+        blastask = 'blastn'
     elif type == 'prot':
         blastype = 'blastp'
+        blastask = 'blastp'
     else:
         print('BLAST type not recognized, please specify "nucl" or "prot"')
         quit(1)
     with open(debuglog, 'a') as debug:
         if container is None:
-            command = [blastype,'-db',database,'-query',input,'-out',output,'-outfmt',format]
+            command = [blastype,'-db',database,'-query',input,'-out',output,'-outfmt',format,'-task',blastask]
             _ = debug.write(' '.join(command) + '\n')
             subprocess.call(command,stdout=debug, stderr=debug)
         else:
-            command = ['singularity','exec',container,blastype,'-db',database,'-query',input,'-out',output,'-outfmt',format]
+            command = ['singularity','exec',container,blastype,'-db',database,'-query',input,'-out',output,'-outfmt',format,'-task',blastask]
             _ = debug.write(' '.join(command) + '\n')
             subprocess.call(command,stdout=debug, stderr=debug)
     print('Finished running BLAST!')
@@ -171,8 +173,6 @@ def main():
     if args.query is None or args.subject is None:
         print('Missing query or subject sequence')
         quit(1)
-    with open('logs/debug_log.txt','w') as fh:
-        _ = fh.write(f'debug log for {args.name}\n')
     # change working directory to location of script
     for f in [args.query,args.subject,args.annotation]:
         if f is not None:
@@ -185,6 +185,8 @@ def main():
     for d in ['logs/','results/','db/']:
         if not os.path.isdir(d):
             subprocess.call(['mkdir',d])
+    with open('logs/debug_log.txt','w') as fh:
+        _ = fh.write(f'debug log for {args.name}\n')
     query_fasta = check_query(args.query,args.name)
     if args.repeatmasker is not None:
         print('REPEAT MASKING CODE IN PROGRESS')
