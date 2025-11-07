@@ -114,10 +114,10 @@ def run_blast(input,database,output,task,evalue,type = 'nucl',format = '10',cont
 def type_check(inp):
     if inp in ['n','nucl','nucleotide']:
         outp = 'nucl'
-    elif args.type in ['p','prot','protein']:
+    elif inp in ['p','prot','protein']:
         outp = 'prot'
     else:
-        print(f'Unrecognized BLAST search type "{args.type}"')
+        print(f'Unrecognized BLAST search type "{inp}"')
         quit(1)
     return(outp)
 
@@ -130,7 +130,7 @@ def task_check(inp,btype):
         else:
             outp = 'blastp'
     else:
-        if (inp in nucl_options and btype == 'nucl') or (inp in prot_options and bytpe == 'prot'):
+        if (inp in nucl_options and btype == 'nucl') or (inp in prot_options and btype == 'prot'):
             outp = inp
         else:
             print(f'BLAST task {inp} is not valid for search type {btype}')

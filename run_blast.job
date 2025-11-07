@@ -1,0 +1,29 @@
+#!/bin/bash
+
+#SBATCH --mail-user=jjhale@umich.edu
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --export=ALL
+#SBATCH --partition=standard
+#SBATCH --account=esnitkin1
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=5g
+#SBATCH --time=01:00:00
+
+#module load Bioinformatics blast-plus/2.16.0 singularity
+#python blast.py -q query/ALS4000_all.fasta -s subject/to318ko_v2/ -th 1 -t nucl -k blastn -n to318_als4000 -v -f 7 -e 1e-5
+
+#module load Bioinformatics blast-plus/2.16.0 singularity
+#python blast.py -q query/ALS4000_all.fasta -s db/to318_als4112_v2/to318_als4112_v2_blastdb.fasta -th 1 -t nucl -k blastn -n to318_als4000 -v -f 7 -e 1e-5 -d
+
+#module load Bioinformatics blast-plus/2.16.0 singularity
+#python blast.py -q query/ALS4000_all.fasta -s subject/to318ko_v2/ -th 1 -t nucl -k blastn -n to318_als4000_masked_v4 -v -f 7 -e 1e-5 -r ../../tetools_1-89-2.sif
+
+# module load Bioinformatics blast-plus/2.16.0 singularity
+# python blast.py -q query/Tn4401b-1.fasta -s /scratch/esnitkin_root/esnitkin0/jjhale/dotplot/reference/kpc_assemblies/ -th 1 -t nucl -k blastn -n kpc_locations_v1 -v -f 7 -e 1e-5
+
+# module load Bioinformatics blast-plus/2.16.0 singularity
+# python blast.py -q query/CaNAT.fasta -s /scratch/esnitkin_root/esnitkin0/jjhale/dotplot/query/Ajay_tpn/ -th 1 -t nucl -k blastn -n Ajay_NAT_locations_v1 -v -f 7 -e 1e-5
+
+module load Bioinformatics blast-plus/2.16.0 singularity
+python blast.py -q query/cladeI_SRR32344497_singletons_seq.fasta -s subject/to897_RIPL/ -th 1 -t nucl -k blastn -n to897_RIPL_singletons_v1 -v -f 7 -e 1e-5
