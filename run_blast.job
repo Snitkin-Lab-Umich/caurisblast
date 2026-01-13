@@ -6,9 +6,9 @@
 #SBATCH --partition=standard
 #SBATCH --account=esnitkin1
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=5g
-#SBATCH --time=01:00:00
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=40g
+#SBATCH --time=05:00:00
 
 #module load Bioinformatics blast-plus/2.16.0 singularity
 #python blast.py -q query/ALS4000_all.fasta -s subject/to318ko_v2/ -th 1 -t nucl -k blastn -n to318_als4000 -v -f 7 -e 1e-5
@@ -25,5 +25,17 @@
 # module load Bioinformatics blast-plus/2.16.0 singularity
 # python blast.py -q query/CaNAT.fasta -s /scratch/esnitkin_root/esnitkin0/jjhale/dotplot/query/Ajay_tpn/ -th 1 -t nucl -k blastn -n Ajay_NAT_locations_v1 -v -f 7 -e 1e-5
 
+# module load Bioinformatics blast-plus/2.16.0 singularity
+# python blast.py -q ../092525_pangenome_results/accessory_blast_search/input/extracted_accessory_sequences_v1.fasta \
+# -s ../092525_pangenome_results/original_nucleotide_fasta/ -th 8 -t nucl -k blastn -n full_blast_accessory_v1 -v -e 1e-5
+
+# module load Bioinformatics blast-plus/2.16.0 singularity
+# python blast.py -q ../092525_pangenome_results/accessory_blast_search/input/extracted_accessory_sequences_TEST.fasta \
+# -s db/full_blast_accessory_v1/full_blast_accessory_v1_blastdb.fasta -th 8 -t nucl -k blastn -n full_blast_accessory_v2 -v -e 1e-3 -d
+
 module load Bioinformatics blast-plus/2.16.0 singularity
-python blast.py -q query/cladeI_SRR32344497_singletons_seq.fasta -s subject/to897_RIPL/ -th 1 -t nucl -k blastn -n to897_RIPL_singletons_v1 -v -f 7 -e 1e-5
+python blast.py -q ../092525_pangenome_results/accessory_blast_search/input/extracted_accessory_sequences_all_v2.fasta \
+-s db/full_blast_accessory_v1/full_blast_accessory_v1_blastdb.fasta -th 8 -t nucl -k blastn -n full_blast_accessory_v2 -v -e 1e-5 -d -w 11
+
+
+

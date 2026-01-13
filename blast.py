@@ -46,12 +46,20 @@ def check_query(input_path,output_name,debuglog):
         cdbg([['cp',input_path,final_query]],debuglog)
     return(final_query)
 
-def make_subject_fasta(input_dir,outputfile):
+def make_subject_fasta(input_dir,outputfile,filter_file=None):
     flist = [x for x in os.listdir(input_dir) if x.endswith('.fasta') or x.endswith('.fa')]
     if len(flist) < 1:
         print('Cannot find .fasta or .fa files for BLAST database in the provided directory')
         quit(1)
     #outpath = f'db/{output_name}' + output_name + '_blastdb.fasta'
+    if filter_file is not None:
+        with open(filter_file,'r') as fh:
+            filter_list = [line.strip() for line in fh]
+        # keep only files that start with an entry in the filter list
+        flist = [x for x in flist if any([x.startswith(y) for y in filter_list])]
+        if len(flist) < 1:
+            print('No files in the provided directory match the provided filter file!')
+            quit(1)
     with open(outputfile,'w') as fhout:
         for fname in flist:
             prefix = fname.split('.fa')[0]
@@ -64,10 +72,10 @@ def make_subject_fasta(input_dir,outputfile):
                     _ = fhout.write('\n')
     return(outputfile)
 
-def check_subject(input_path,output_name,debuglog):
+def check_subject(input_path,output_name,filter_file,debuglog):
     final_subject = f'db/{output_name}/{output_name}_blastdb.fasta'
     if os.path.isdir(input_path):
-        final_subject = make_subject_fasta(input_path + '/',final_subject)
+        final_subject = make_subject_fasta(input_path + '/',final_subject,filter_file)
     elif os.path.isfile(input_path) and (input_path.endswith('.fasta') or input_path.endswith('.fa')):
         cdbg([['cp',input_path,final_subject]],debuglog)
     else:
@@ -88,7 +96,7 @@ def make_blast_db(input_fasta,output_name,type = 'nucl',container = None,debuglo
             subprocess.call(command,stdout=debug, stderr=debug)
         return(input_fasta)
 
-def run_blast(input,database,output,task,evalue,type = 'nucl',format = '10',container = None,threads = '1', debuglog = 'logs/debug_log.txt', repeatmasker = None):
+def run_blast(input,database,output,task,evalue,wordsize,type = 'nucl',format = '10',container = None,threads = '1', debuglog = 'logs/debug_log.txt', repeatmasker = None):
     if type == 'nucl':
         blastype = 'blastn'
     elif type == 'prot':
@@ -98,7 +106,7 @@ def run_blast(input,database,output,task,evalue,type = 'nucl',format = '10',cont
         quit(1)
     with open(debuglog, 'a') as debug:
         if container is None:
-            command = [blastype,'-db',database,'-query',input,'-out',output,'-outfmt',format,'-task',task,'-evalue',evalue,'-num_threads',threads]
+            command = [blastype,'-db',database,'-query',input,'-out',output,'-outfmt',format,'-task',task,'-evalue',evalue,'-num_threads',threads,'-strand','both','-word_size',wordsize]
             if repeatmasker is not None:
                 command+=['-db_soft_mask','40']
             cdbg([command],debuglog)
@@ -186,17 +194,22 @@ def main():
     parser.add_argument(
         '--query','-q',type=str,
         help='''Provide a query sequence in fasta format (.fasta or .fa). This can be either a single file or a directory of files.''',
-        default=None,required=True
+        required=True
         )
     parser.add_argument(
         '--subject','-s',type=str,
         help='''Provide a subject to perform the search on. This can be a single file or a directory of files, all in the fasta format. 
         A new BLAST database will be generated from the provided sequences.
         If you are using an existing database, provide the path to the database and use the "--database" flag.''',
-        default=None,required=True
+        required=True
         )
     parser.add_argument(
         '--database','-d',action='store_true',help='''Add this flag if you provided a pre-built BLAST database with "--subject".'''
+        )
+    parser.add_argument(
+        '--filterfile','-ff',type=str,
+        help='''(Optional) Provide a path to one-column csv file. Only files with names matching this file will be included in the subject, assuming a directory was provided.''',
+        default=None,required=False
         )
     parser.add_argument(
         '--type','-t',type=str,choices=['n','nucl','nucleotide','p','prot','protein'],
@@ -222,8 +235,13 @@ def main():
         default='1e-3'
         )
     parser.add_argument(
-        '--format','-f',type=str,help='''(Optional) Provide an alternate format for the BLAST search output. The default is format 10.''',
-        default='10'
+        '--wordsize','-w',type=str,help='''(Optional) Provide a wordsize for this search. 
+        The default is 11.''',
+        default='11'
+        )
+    parser.add_argument(
+        '--format','-f',type=str,help='''(Optional) Provide an alternate format for the BLAST search output. The default is format 7, with query and subject length included.''',
+        default='7 qaccver saccver pident length mismatch gapopen qstart qend sstart send evalue bitscore qlen slen sstrand'
         )
     parser.add_argument(
         '--annotation','-a',type=str,help='''(Optional) Provide a protein annotation file for use with a nucleotide BLAST.
@@ -258,12 +276,12 @@ def main():
         print('Missing query or subject sequence')
         quit(1)
     # ensure query, subject, and annotation files exist, and convert them to absolute paths
-    for f in [args.query,args.subject,args.annotation]:
+    for f in [args.query,args.subject,args.annotation,args.filterfile]:
         if f is not None:
             if not os.path.exists(f):
                 print(f'Could not locate file or directory at {f}')
                 quit(1)
-    args.query,args.subject,args.annotation = [os.path.abspath(x) if x is not None else x for x in [args.query,args.subject,args.annotation]]
+    args.query,args.subject,args.annotation,args.filterfile = [os.path.abspath(x) if x is not None else x for x in [args.query,args.subject,args.annotation,args.filterfile]]
     # change working directory to location of script
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     # generate the files and directories needed for the BLAST search in this directory
@@ -290,7 +308,7 @@ def main():
     # generate a BLAST database, if needed
     mask_data = None
     if not args.database:
-        subject_fasta = check_subject(args.subject,args.name,debuglog)
+        subject_fasta = check_subject(args.subject,args.name,args.filterfile,debuglog)
         if args.verbose:
             print(f'Subject check complete. The subject is currently {subject_fasta}')
         if args.repeatmasker is not None:
@@ -312,7 +330,7 @@ def main():
                 print('Enabling repeat masking in the existing database')
     search_output_name = f'results/{args.name}/{args.name}_{args.type}_{args.task}_{args.evalue}_blast_results.csv'
     run_blast(
-        input=query_fasta, database=subject_fasta, output=search_output_name, task=args.task, type=args.type, evalue=args.evalue, 
+        input=query_fasta, database=subject_fasta, output=search_output_name, task=args.task, type=args.type, evalue=args.evalue, wordsize=args.wordsize,
         format=args.format, container=args.container, threads=args.threads, debuglog=debuglog, repeatmasker=mask_data)
     # addition needed here - attach annotation data to results
 
