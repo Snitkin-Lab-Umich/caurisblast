@@ -54,9 +54,10 @@ def make_subject_fasta(input_dir,outputfile,filter_file=None):
     #outpath = f'db/{output_name}' + output_name + '_blastdb.fasta'
     if filter_file is not None:
         with open(filter_file,'r') as fh:
-            filter_list = [line.strip() for line in fh]
+            filter_list = [line.strip() + '.' for line in fh]
         # keep only files that start with an entry in the filter list
         flist = [x for x in flist if any([x.startswith(y) for y in filter_list])]
+        print(f'files used for blast db: {flist}')
         if len(flist) < 1:
             print('No files in the provided directory match the provided filter file!')
             quit(1)
